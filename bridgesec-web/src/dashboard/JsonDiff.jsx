@@ -8,7 +8,7 @@ const JsonDiff = ({sourceLeft, sourceRight}) => {
     detectCircular: true, // default `true`
     maxDepth: Infinity, // default `Infinity`
     showModifications: true,
-    preserveKeyOrder:false, // default `true`
+    preserveKeyOrder:true, // default `true`
     arrayDiffMethod: "normal" // default `"normal"`, but `"lcs"` may be more useful
   });
 
