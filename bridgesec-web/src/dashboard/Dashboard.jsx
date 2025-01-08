@@ -18,6 +18,9 @@ const Dashboard = () => {
     const [mode, setMode] = useState('');
     const [selectedEntityTypeId, setSelectedEntityTypeId] = useState('');
     const [selectedEntityId, setSelectedEntityId] = useState('');
+    
+    const [selectedEntityName, setSelectedEntityName] = useState(null); 
+
     const [primaryJson, setPrimaryJson] = useState([]);
     const [comparisonJson, setComparisonJson] = useState([]);
     const [firstDate, setFirstDate] = useState(null);
@@ -25,56 +28,112 @@ const Dashboard = () => {
     const [comparedJson, setComparedJson] = useState([]);
     const [selectStorageType, setstorageType] = useState([]);
     const [jsonViewExpanded, setjsonViewExpanded] = useState(true);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetchEntityTypes();
     }, [])
 
     // get the entity tpye using MONGO DB
-    const fetchEntityTypes = () => {
-        axiosInstance.get(`${apiBaseUrl}/dashboard/entityTypes`).then((res) => {
-            const options = res.data.map(item => ({
+    const fetchEntityTypes = async() => {
+        setLoading(true); // Show loading indicator
+        try {
+            const res = await axiosInstance.get(`${apiBaseUrl}/dashboard/entityTypes`);
+            const options = res.data.map((item) => ({
                 entityTypeId: item.entityTypeId,
                 label: item.name,
                 value: item.name,
                 entityPropertyName: item.entityPropertyName,
-                storageType: item.storageType
+                storageType: item.storageType,
             }));
             setEntityTypeOptions(options);
-        }).catch((err) => {
-            console.error("Error fetching entity types: " + err);
-        })
+        } catch (err) {
+            console.error("Error fetching entity types: ", err);
+        } finally {
+            setLoading(false); // Hide loading indicator
+        }
+        // axiosInstance.get(`${apiBaseUrl}/dashboard/entityTypes`).then((res) => {
+        //     const options = res.data.map(item => ({
+        //         entityTypeId: item.entityTypeId,
+        //         label: item.name,
+        //         value: item.name,
+        //         entityPropertyName: item.entityPropertyName,
+        //         storageType: item.storageType
+        //     }));
+        //     setEntityTypeOptions(options);
+        // }).catch((err) => {
+        //     console.error("Error fetching entity types: " + err);
+        // })
     }
 
     //get the entity name
     const fetchEntityNames = async (selectedOption) => {
-        const params = {
-            entityTypeId: selectedOption.entityTypeId,
-            entityPropertyName: selectedOption.entityPropertyName,
-            storageType: selectedOption.storageType
-        };
+        // const params = {
+        //     entityTypeId: selectedOption.entityTypeId,
+        //     entityPropertyName: selectedOption.entityPropertyName,
+        //     storageType: selectedOption.storageType
+        // };
         if (!selectedOption) return;
-        const res = await axiosInstance.post(`${apiBaseUrl}/dashboard/entities`, params, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        const options = res.data.map(item => ({
-            id: item.id,
-            label: item.label,
-            value: item,
-            storageType: item.storageType
-        }));
-        setEntityNameOptions(options);
+        setLoading(true); // Show loading indicator
+        
+        try {
+            const params = {
+                entityTypeId: selectedOption.entityTypeId,
+                entityPropertyName: selectedOption.entityPropertyName,
+                storageType: selectedOption.storageType,
+            };
+            const res = await axiosInstance.post(`${apiBaseUrl}/dashboard/entities`, params);
+            const options = res.data.map((item) => ({
+                id: item.id,
+                label: item.label,
+                value: item,
+                storageType: item.storageType,
+            }));
+            
+            setEntityNameOptions(options);
+        } catch (err) {
+            console.error("Error fetching entity names: ", err);
+        } finally {
+            setLoading(false); // Hide loading indicator
+        }
+        // const res = await axiosInstance.post(`${apiBaseUrl}/dashboard/entities`, params, {
+        //     headers: {
+        //         'Content-Type': 'application/json'
+        //     }
+        // });
+        // const options = res.data.map(item => ({
+        //     id: item.id,
+        //     label: item.label,
+        //     value: item,
+        //     storageType: item.storageType
+        // }));
+        // setEntityNameOptions(options);
 
     }
 
     // handle entity type change 
     const handleEntityTypeChange = (selectedOption) => {
+        // if (selectedOption) {
+        //     setEntityNameOptions([]);
+        //     fetchEntityNames(selectedOption);
+        //     setSelectedEntityTypeId(selectedOption.entityTypeId);
+        // }
         if (selectedOption) {
+            // Clear previous Entity Name options and selected value
             setEntityNameOptions([]);
+            // Preserve selected entity name if it matches the new type
+            if (selectedEntityName && selectedOption.entityPropertyName === selectedEntityName.entityPropertyName) {
+                // If the selected name is still valid for the new type, keep it
+                fetchEntityNames(selectedOption);
+            } else {
+                // Otherwise clear it
+                setSelectedEntityId('');
+                setSelectedEntityName(null);
+            }
             fetchEntityNames(selectedOption);
-            setSelectedEntityTypeId(selectedOption.entityTypeId);
+            setSelectedEntityTypeId(selectedOption.entityTypeId); // Update selected Entity Type ID
+        } else {
+            setEntityTypeOptions([]); // Clear Entity Type options if nothing is selected
         }
     }
 
@@ -86,6 +145,7 @@ const Dashboard = () => {
         const formattedDate = formatDate(new Date());
         if (selectedOption) {
             setSelectedEntityId(selectedOption.id);
+            setSelectedEntityName(selectedOption);
             setstorageType(selectedOption.storageType);
             const params = {
                 entityTypeId: selectedEntityTypeId,
@@ -187,7 +247,7 @@ const Dashboard = () => {
                 <div className='flex gap-4 mb-1 bg-[#b9b9b90a] p-2 rounded-lg border border-[#eeeeee9e] dark:bg-[#ffffff0d] dark:border-[#eeeeee1a]'>
                     <div className='flex-1'>
                         <FormItem label='Entity Type' className='mb-0'>
-                            <Select size='sm' placeholder="Please Select" options={entityTypeOptions} onChange={handleEntityTypeChange} />
+                            <Select size='sm' placeholder={loading ? "Loading..." : "Please Select"} options={entityTypeOptions} isDisabled={loading} onChange={handleEntityTypeChange} />
                         </FormItem>
                     </div>
                     <div className='flex-1'>
@@ -199,6 +259,7 @@ const Dashboard = () => {
                                 loadOptions={loadEntityOptions}
                                 componentAs={AsyncSelect}
                                 onChange={handleEntityNameChange}
+                                value={selectedEntityName}
                             />
                         </FormItem>
                     </div>
