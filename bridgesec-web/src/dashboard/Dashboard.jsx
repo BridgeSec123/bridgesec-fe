@@ -35,8 +35,7 @@ const Dashboard = () => {
     }, [])
 
     // get the entity tpye using MONGO DB
-    const fetchEntityTypes = async() => {
-        setLoading(true); // Show loading indicator
+    const fetchEntityTypes = async() => {        
         try {
             const res = await axiosInstance.get(`${apiBaseUrl}/dashboard/entityTypes`);
             const options = res.data.map((item) => ({
@@ -49,9 +48,7 @@ const Dashboard = () => {
             setEntityTypeOptions(options);
         } catch (err) {
             console.error("Error fetching entity types: ", err);
-        } finally {
-            setLoading(false); // Hide loading indicator
-        }
+        } 
         // axiosInstance.get(`${apiBaseUrl}/dashboard/entityTypes`).then((res) => {
         //     const options = res.data.map(item => ({
         //         entityTypeId: item.entityTypeId,
@@ -118,6 +115,8 @@ const Dashboard = () => {
         //     fetchEntityNames(selectedOption);
         //     setSelectedEntityTypeId(selectedOption.entityTypeId);
         // }
+        setLoading(true); // Show loading indicator
+        try{
         if (selectedOption) {
             // Clear previous Entity Name options and selected value
             setEntityNameOptions([]);
@@ -134,6 +133,11 @@ const Dashboard = () => {
             setSelectedEntityTypeId(selectedOption.entityTypeId); // Update selected Entity Type ID
         } else {
             setEntityTypeOptions([]); // Clear Entity Type options if nothing is selected
+        }
+    }catch (err) {
+        console.error("Error handle entity types change: ", err);
+    } finally {
+            setLoading(false); // Hide loading indicator
         }
     }
 
