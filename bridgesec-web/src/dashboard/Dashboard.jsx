@@ -35,7 +35,8 @@ const Dashboard = () => {
     }, [])
 
     // get the entity tpye using MONGO DB
-    const fetchEntityTypes = async() => {        
+    const fetchEntityTypes = async() => {
+        setLoading(true); // Show loading indicator
         try {
             const res = await axiosInstance.get(`${apiBaseUrl}/dashboard/entityTypes`);
             const options = res.data.map((item) => ({
@@ -48,28 +49,15 @@ const Dashboard = () => {
             setEntityTypeOptions(options);
         } catch (err) {
             console.error("Error fetching entity types: ", err);
-        } 
-        // axiosInstance.get(`${apiBaseUrl}/dashboard/entityTypes`).then((res) => {
-        //     const options = res.data.map(item => ({
-        //         entityTypeId: item.entityTypeId,
-        //         label: item.name,
-        //         value: item.name,
-        //         entityPropertyName: item.entityPropertyName,
-        //         storageType: item.storageType
-        //     }));
-        //     setEntityTypeOptions(options);
-        // }).catch((err) => {
-        //     console.error("Error fetching entity types: " + err);
-        // })
+        } finally {
+            setLoading(false); // Hide loading indicator
+        }
+       
     }
 
     //get the entity name
     const fetchEntityNames = async (selectedOption) => {
-        // const params = {
-        //     entityTypeId: selectedOption.entityTypeId,
-        //     entityPropertyName: selectedOption.entityPropertyName,
-        //     storageType: selectedOption.storageType
-        // };
+        
         if (!selectedOption) return;
         setLoading(true); // Show loading indicator
         
@@ -93,30 +81,12 @@ const Dashboard = () => {
         } finally {
             setLoading(false); // Hide loading indicator
         }
-        // const res = await axiosInstance.post(`${apiBaseUrl}/dashboard/entities`, params, {
-        //     headers: {
-        //         'Content-Type': 'application/json'
-        //     }
-        // });
-        // const options = res.data.map(item => ({
-        //     id: item.id,
-        //     label: item.label,
-        //     value: item,
-        //     storageType: item.storageType
-        // }));
-        // setEntityNameOptions(options);
-
+       
     }
 
     // handle entity type change 
     const handleEntityTypeChange = (selectedOption) => {
-        // if (selectedOption) {
-        //     setEntityNameOptions([]);
-        //     fetchEntityNames(selectedOption);
-        //     setSelectedEntityTypeId(selectedOption.entityTypeId);
-        // }
-        setLoading(true); // Show loading indicator
-        try{
+       
         if (selectedOption) {
             // Clear previous Entity Name options and selected value
             setEntityNameOptions([]);
@@ -133,11 +103,6 @@ const Dashboard = () => {
             setSelectedEntityTypeId(selectedOption.entityTypeId); // Update selected Entity Type ID
         } else {
             setEntityTypeOptions([]); // Clear Entity Type options if nothing is selected
-        }
-    }catch (err) {
-        console.error("Error handle entity types change: ", err);
-    } finally {
-            setLoading(false); // Hide loading indicator
         }
     }
 
@@ -251,7 +216,7 @@ const Dashboard = () => {
                 <div className='flex gap-4 mb-1 bg-[#b9b9b90a] p-2 rounded-lg border border-[#eeeeee9e] dark:bg-[#ffffff0d] dark:border-[#eeeeee1a]'>
                     <div className='flex-1'>
                         <FormItem label='Entity Type' className='mb-0'>
-                            <Select size='sm' placeholder={loading ? "Loading..." : "Please Select"} options={entityTypeOptions} isDisabled={loading} onChange={handleEntityTypeChange} />
+                            <Select size='sm' options={loading? "Loading..." :entityTypeOptions} onChange={handleEntityTypeChange} />
                         </FormItem>
                     </div>
                     <div className='flex-1'>
