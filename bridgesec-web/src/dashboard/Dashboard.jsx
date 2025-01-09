@@ -216,10 +216,7 @@ const Dashboard = () => {
                 <div className='flex gap-4 mb-1 bg-[#b9b9b90a] p-2 rounded-lg border border-[#eeeeee9e] dark:bg-[#ffffff0d] dark:border-[#eeeeee1a]'>
                     <div className='flex-1'>
                         <FormItem label='Entity Type' className='mb-0'>
-                            <Select size='sm' options={loading 
-        ? [{ label: "Loading...", value: "loading", isDisabled: true }] 
-        : entityTypeOptions
-    } onChange={handleEntityTypeChange} />
+                            <Select size='sm' options={entityTypeOptions} onChange={handleEntityTypeChange} isLoading={loading}/>
                         </FormItem>
                     </div>
                     <div className='flex-1'>
